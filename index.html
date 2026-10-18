@@ -1,0 +1,835 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>智能调度实验室</title>
+<style>
+:root{
+  --bg:#eef3f8; --panel:#ffffff; --ink:#173049; --sub:#5c7288; --line:#d9e5f0;
+  --brand:#0f6fb3; --brand-2:#0b4f80; --teal:#0f8f86; --warn:#c2410c; --bad:#be123c; --ok:#0f8f5b;
+  --soft:#eaf3fb; --soft-2:#f4f9fd; --chip:#e7f1fb;
+  --shadow:0 8px 26px rgba(20,55,90,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.6 "Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+a{color:var(--brand)}
+header.hero{background:linear-gradient(120deg,#0b3557,#0f6fb3 60%,#12879a);color:#fff;padding:30px 5% 26px}
+header.hero h1{margin:0 0 4px;font-size:26px;letter-spacing:.5px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.flow .step{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 14px;font-size:13px}
+.flow .arrow{align-self:center;opacity:.7}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+.tabs{display:flex;gap:8px;margin:6px 0 14px;flex-wrap:wrap}
+.tabs button{flex:1 1 220px;margin:0;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer;box-shadow:var(--shadow)}
+.tabs button b{display:block;font-size:16px;color:var(--brand-2)}
+.tabs button small{display:block;color:var(--sub);font-size:12px;line-height:1.5;margin-top:4px}
+.tabs button.active{background:var(--brand);border-color:var(--brand)}
+.tabs button.active b,.tabs button.active small{color:#fff}
+.subtabs{display:flex;gap:8px;margin:-4px 0 14px}.subtabs button{border:1px solid var(--line);background:var(--chip);color:var(--brand-2);border-radius:9px;padding:8px 13px;cursor:pointer}.subtabs button.active{background:var(--brand);color:#fff}.guide{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+.guide .cell{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6;box-shadow:var(--shadow)}
+.guide .cell b{color:var(--brand-2)}
+section.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);margin-bottom:18px}
+section.panel>h2{margin:0 0 4px;font-size:20px;color:var(--brand-2)}
+section.panel>p.lead{margin:2px 0 14px;color:var(--sub);font-size:13px}
+.cols{display:grid;grid-template-columns:400px 1fr;gap:18px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:10px}
+label.fld{display:block;margin:12px 0 4px;font-weight:700;font-size:13px}
+input,textarea,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+textarea{resize:vertical;min-height:96px;font-family:ui-monospace,"Consolas","Microsoft YaHei",monospace;font-size:13px;line-height:1.5}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+button.btn{background:var(--brand);color:#fff;border:0;border-radius:9px;padding:11px 16px;cursor:pointer;font-weight:700;font-size:14px}
+button.btn.ghost{background:var(--chip);color:var(--brand-2)}
+button.btn:hover{filter:brightness(1.05)}
+button.btn:active{transform:translateY(1px)}
+.note{font-size:12px;color:var(--sub);line-height:1.6}
+.hint{background:var(--soft-2);border:1px dashed var(--line);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--sub)}
+.preset{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:8px 0}
+.preset button{margin:0;padding:9px 6px;font-size:13px;background:var(--chip);color:var(--brand-2);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.preset button.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 4px}
+.stat{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:120px}
+.stat b{display:block;font-size:20px;color:var(--brand-2);margin-top:2px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin:1px 4px 1px 0}
+.badge.opt{background:#e3f5ea;color:var(--ok)} .badge.heur{background:#fdeccc;color:#a5670a}
+.badge.info{background:#e5eff9;color:var(--brand-2)} .badge.warn{background:#fde5d8;color:var(--warn)}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0}
+.card{background:var(--soft-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;line-height:1.6;font-size:13px}
+.card b{color:var(--brand-2)}
+.err{color:var(--bad);font-weight:700;margin-top:8px;min-height:18px}
+.okline{color:var(--ok);font-weight:700}
+.chart{overflow-x:auto;padding-bottom:6px}
+.gline{display:flex;align-items:center;margin:7px 0;gap:10px}
+.glabel{width:112px;flex:none;font-size:12px;line-height:1.35;color:var(--sub);text-align:right}
+.glabel b{color:var(--ink)}
+.gtrack{position:relative;flex:1;min-width:520px;height:32px;background:repeating-linear-gradient(90deg,#f1f5f9,#f1f5f9 1px,#e9eff5 1px,#e9eff5 40px);border:1px solid var(--line);border-radius:6px}
+.gtrack .lunch{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,#e7eef5,#e7eef5 5px,#dde7f1 5px,#dde7f1 10px);opacity:.9}
+.gbar{position:absolute;top:4px;height:24px;border-radius:5px;color:#fff;font-size:11px;line-height:24px;text-align:center;overflow:hidden;white-space:nowrap;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.gaxis{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin:2px 0 0 122px;min-width:520px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left}
+th{background:var(--soft);color:var(--brand-2);position:sticky;top:0}
+.tblwrap{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+.subhead{font-size:15px;color:var(--brand-2);margin:16px 0 6px;font-weight:700}
+.report{background:var(--soft-2);border-left:4px solid var(--brand);border-radius:8px;padding:12px 14px;line-height:1.7;margin:12px 0;font-size:13px}
+.hidden{display:none!important}
+footer{max-width:1180px;margin:8px auto 40px;padding:16px;color:var(--sub);font-size:12px;line-height:1.7}
+@media(max-width:920px){.cols{grid-template-columns:1fr}.guide,.cards{grid-template-columns:1fr}.preset{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <h1>智能调度实验室</h1>
+  <div>面向流水车间与设备调度的中文排程实验台：可核验、可导出、默认纯本地运行。</div>
+  <div class="flow">
+    <span class="step">① 输入需求</span><span class="arrow">→</span>
+    <span class="step">② 数据检查</span><span class="arrow">→</span>
+    <span class="step">③ 排程求解</span><span class="arrow">→</span>
+    <span class="step">④ 规则审核</span><span class="arrow">→</span>
+    <span class="step">⑤ 图表分析</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" id="tabs" aria-label="选择问题领域">
+    <button type="button" data-group="production" class="active"><b>生产排程</b><small>订单流水、灵活设备、工位人员</small></button>
+    <button type="button" data-tab="staff"><b>人员排班</b><small>按时段需求安排护士班次</small></button>
+    <button type="button" data-tab="project"><b>项目计划</b><small>任务前后关系与关键路径</small></button>
+    <button type="button" data-tab="coopa"><b>COOPA 原系统</b><small>AI 建模与代理求解；需要 API</small></button>
+  </nav>
+  <nav class="subtabs" id="productionTabs" aria-label="选择生产排程方式">
+    <button type="button" data-tab="standard" class="active">固定流水</button>
+    <button type="button" data-tab="advanced">灵活设备</button>
+    <button type="button" data-tab="assignment">工位人员分配</button>
+  </nav>
+
+  <div class="guide" aria-label="场景选择指南">
+    <div class="cell"><b>生产排程</b>：先选固定流水、灵活设备或工位人员分配。前两种排任务时间；人员分配优化瓶颈效率。</div>
+    <div class="cell"><b>人员排班</b>：先选单日或一周，再选需求覆盖、固定轮班或个人可用工时。</div>
+    <div class="cell"><b>项目计划</b>：活动有前置任务，选择最短工期或最低项目与设备租赁总成本。</div>
+    <div class="cell"><b>COOPA 原系统</b>：输入完整运筹题，由 AI 建模求解；需要可用的模型 API 额度。</div>
+  </div>
+  <p class="note" style="margin:8px 2px 18px">选择问题类型，使用文字识别或直接修改参数，再运行求解；报告说明约束、算法与结果。所有数据都由你决定。</p>
+
+  <!-- ================= 标准流水排程 ================= -->
+  <section class="panel" id="standardPanel">
+    <h2>标准流水排程</h2><div class="case-config" style="margin:10px 0 16px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--soft-2)"><label class="fld">问题类型</label><select data-extra-select><option value="">班次流水：按分钟排，含午休、停机与交期</option><option value="IndustryOR-035">连续流水：2–4 台机器，按小时排</option></select><p class="note" data-type-summary>适合有每日班次、午休、停机或交期的订单；工时填整数分钟。</p><div data-extra-editor style="display:none"><p class="note" data-extra-help></p><label class="fld">直接输入参数（JSON，可自行增减或修改数值）</label><textarea data-extra-config style="min-height:170px"></textarea><button type="button" class="btn ghost" data-extra-run>按这些参数求解</button><div class="report" data-extra-output>请填写参数后求解。</div></div></div>
+    <p class="lead">订单按同一工位顺序 I→II→…加工；工序不可跨午休或停机。时间均为同一天的 HH:MM（整数分钟）。</p>
+    <div class="cols">
+      <div class="stack">
+        <div>
+          <label class="fld">自然语言快速填写</label>
+          <textarea id="stdNl" style="min-height:78px" placeholder="每行：订单名,第一工位分钟,第二工位分钟&#10;J1,30,70&#10;J2,60,70"></textarea>
+          <div class="row"><button type="button" class="btn ghost" id="stdNlBtn">识别并填入</button></div>
+          <div class="note" id="stdNlMsg">仅解析结构化文字，不调用 AI；缺失的时长、班次、交期不会被默默补全。</div>
+        </div>
+
+        <div class="hint">可以直接填写自己的订单与工位数据；下方模板只是可选练习。</div>
+        <div class="preset" id="stdPreset">
+          <button type="button" data-preset="0">基础流水线</button>
+          <button type="button" data-preset="1">紧急插单</button>
+          <button type="button" data-preset="2">交期压力</button>
+          <button type="button" data-preset="3">工位停机</button>
+          <button type="button" data-preset="4">多订单高负荷</button>
+          <button type="button" data-preset="5">错峰到达</button>
+        </div>
+        <div class="report" id="presetInfo"></div>
+
+        <label class="fld">订单数 / 工位数</label>
+        <div class="row">
+          <input id="jobCount" type="number" min="1" max="12" value="3">
+          <input id="stationCount" type="number" min="2" max="8" value="2">
+        </div>
+        <div class="note">订单 1–12、工位 2–8；订单 &gt;7 时仅支持两工位经典流水（Johnson）。改数量后点“调整输入表”。</div>
+        <button type="button" class="btn ghost" id="stdResize">调整输入表</button>
+
+        <label class="fld">订单与工位时长（分钟）</label>
+        <textarea id="stdJobs" placeholder="每行：订单名,第一工位分钟,第二工位分钟"></textarea>
+        <div class="note">每行：订单名,各工位分钟。名称唯一，时长为正整数。</div>
+
+        <label class="fld">班次：上班 / 午休开始 / 午休结束 / 下班</label>
+        <input id="stdShift" value="08:00,12:00,13:00,17:00">
+
+        <label class="fld">到达 / 交期 / 权重（可选）</label>
+        <textarea id="stdRules" style="min-height:60px" placeholder="订单名,到达,交期,权重&#10;D,09:00,15:00,3"></textarea>
+
+        <label class="fld">单工位停机（可选）</label>
+        <input id="stdDowntime" placeholder="工位,开始,结束，如 III,10:00,11:30">
+
+        <label class="fld">优化目标</label>
+        <select id="stdGoal">
+          <option value="finish">最早完成全部订单</option>
+          <option value="late">优先减少加权逾期</option>
+        </select>
+        <button type="button" class="btn" id="stdRun">生成排程</button>
+        <div class="err" id="stdErr"></div>
+        <p class="note">页面在浏览器本地计算，不上传输入；示例数据为模拟数据。</p>
+      </div>
+
+      <div class="stack">
+        <div class="stats">
+          <div class="stat">全部完工<b id="rFinish">—</b></div>
+          <div class="stat">加权逾期<b id="rLate">—</b></div>
+          <div class="stat">可行顺序<b id="rSeq">—</b></div>
+          <div class="stat">跨度分钟<b id="rSpan">—</b></div>
+        </div>
+        <div id="rAlgo"></div>
+        <div class="subhead">甘特图</div>
+        <div class="chart" id="rChart"></div>
+        <div class="report" id="rAnalysis">点击“生成排程”查看结果。</div>
+        <div class="cards" id="rCards"></div>
+        <div class="subhead">逐工序排程表</div>
+        <div class="tblwrap"><table id="rTable"></table></div>
+        <div class="row"><button type="button" class="btn ghost" id="rDownload">下载 CSV（含输入摘要与算法声明）</button></div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 进阶设备调度 ================= -->
+  <section class="panel" id="advancedPanel" style="display:none">
+    <h2>进阶设备调度</h2>
+    <p class="lead">每道工序只能选一台可用设备；同订单工序按行顺序执行；设备同一时刻容量为 1；工序不跨午休或停机。浏览器内使用<b>贪心启发式</b>，一般不保证全局最优（识别为无额外约束的两机流水时改用 Johnson 内核）。</p>
+    <div class="cols">
+      <div class="stack">
+        <div>
+          <label class="fld">自然语言快速填写（进阶）</label>
+          <textarea id="advNl" style="min-height:118px" placeholder="订单 A，08:00 到达，16:00 交期，优先级 2
+A 的切割工序需要 65 分钟，可用 M1 或 M2
+A 的检测工序需要 25 分钟，只能用 M4
+M2 从 10:00 到 11:00 停机"></textarea>
+          <div class="row"><button type="button" class="btn ghost" id="advNlBtn">识别并填入表格</button></div>
+          <div class="note" id="advNlMsg">只识别明确写出的订单、工序、设备与停机；未写的时长/班次/设备不会自动补造。识别后请核对表格。</div>
+        </div>
+
+        <label class="fld">第 1 步 · 订单：名称 / 最早到达 / 交期 / 优先级</label>
+        <textarea id="advOrders" style="min-height:88px" placeholder="A,08:00,16:00,2"></textarea>
+        <div class="note">优先级越大，并列时越先安排。</div>
+
+        <label class="fld">第 2 步 · 工序：订单 / 工序名 / 分钟 / 可选设备</label>
+        <textarea id="advOps" style="min-height:150px" placeholder="A,切割,65,M1|M2"></textarea>
+        <div class="note">多台设备用 | 分隔；同一订单按行顺序加工。</div>
+
+        <label class="fld">第 3 步 · 设备停机：设备 / 开始 / 结束</label>
+        <textarea id="advDown" style="min-height:48px" placeholder="可留空；例如 M2,10:00,11:00"></textarea>
+
+        <label class="fld">班次：上班 / 午休开始 / 午休结束 / 下班</label>
+        <input id="advShift" value="08:00,12:00,13:00,17:00">
+
+        <button type="button" class="btn" id="advRun">第 4 步 · 生成并审核排程</button>
+        <div class="err" id="advErr"></div>
+      </div>
+
+      <div class="stack">
+        <div class="stats" id="advStats"></div>
+        <div id="advAlgo"></div>
+        <div class="subhead">建模与规则审核</div>
+        <div class="cards" id="advAudit"></div>
+        <div class="report" id="advReport"></div>
+        <div class="subhead">甘特图</div>
+        <div class="chart" id="advChart"></div>
+        <div class="subhead">排程表</div>
+        <div class="tblwrap"><table id="advTable"></table></div>
+        
+      </div>
+    </div>
+  </section>
+
+<section id="projectPanel" class="panel" style="display:none"><h2>项目活动排程 </h2><p>每行填写：活动名,持续天数,前置活动（多个用 | 分隔；没有则留空）。同一套活动数据可选择最短工期，或加上设备租赁成本后选择最低总成本；不含共享资源容量。</p><label class="fld">自然语言快速填写</label><textarea id="projectNl" style="min-height:84px" placeholder="例如：任务 A 持续 3 天，无前置任务&#10;任务 B 持续 4 天，前置任务 A"></textarea><button type="button" class="btn ghost" id="projectNlBtn">识别项目任务并填入</button><div class="note" id="projectNlMsg">本地识别明确的数字和关系；请核对下方输入后再求解。</div><textarea id="projectInput" style="height:240px"></textarea><label class="fld">优化目标</label><select id="projectGoal"><option value="duration">最短工期与关键路径</option><option value="cost">最低总成本（项目每日成本 + 设备租赁）</option></select><p class="note" id="projectGoalHelp">适合只关注活动先后顺序和最早完工日的项目。</p><div id="projectCostFields" style="display:none"><div class="cols"><div><label class="fld">项目每日成本（元/天）</label><input id="projectDailyCost" type="number" min="0" step="any" placeholder="例如 1000"></div><div><label class="fld">设备日租金（元/天）</label><input id="projectRentalCost" type="number" min="0" step="any" placeholder="例如 5000"></div></div><div class="cols"><div><label class="fld">开始租赁的活动名</label><input id="projectRentalStart" placeholder="例如 A"></div><div><label class="fld">结束租赁的活动名</label><input id="projectRentalEnd" placeholder="例如 D"></div></div><p class="note">租赁期从开始活动开工算至结束活动完工；两项活动必须存在于上方列表。</p></div><button type="button" id="projectRun">计算关键路径</button><div id="projectResult" class="analysis"></div><div id="projectChart" class="chart"></div><div id="projectTable"></div></section><section id="staffPanel" class="panel" style="display:none">
+<h2>人员排班</h2><p>自行设定排几天、每天分几段、每班工作多久；再选择排班规则并填写需求。参数改变后会重新建模求解。</p>
+<div class="cols"><div><label class="fld">排班天数（1–14）</label><input id="flexDays" type="number" min="1" max="14" value="1"></div><div><label class="fld">排班规则</label><select id="flexRule"><option value="flex">每天自由安排班次</option><option value="repeat">每天重复同一班次配置</option><option value="consecutive">人员连续工作若干天</option><option value="individual">按个人可用工时分配</option></select></div></div>
+<p class="note" id="flexRuleHelp"></p>
+<div id="flexShiftFields"><div class="cols"><div><label class="fld">每天时段数（1–12）</label><input id="flexSlots" type="number" min="1" max="12" value="6"></div><div><label class="fld">每个时段时长（分钟）</label><input id="flexSlotMinutes" type="number" min="1" max="1440" step="any" value="240" readonly><p class="note">按 24 小时平均分段，随时段数自动计算。</p></div></div>
+<div class="cols"><div><label class="fld">每天第一个时段开始时间</label><input id="flexStart" type="time" value="02:00"></div><div><label class="fld">每班连续覆盖几段</label><input id="flexLength" type="number" min="1" max="12" value="2"></div></div>
+<div id="flexWorkdaysBox" style="display:none"><label class="fld">每人连续工作天数</label><input id="flexWorkdays" type="number" min="1" max="14" value="5"></div>
+<label class="fld">每天各时段需求</label><textarea id="flexDemand" style="min-height:120px" placeholder="每一天一行，逗号分隔各时段人数。例如 6 段：&#10;8,10,12,10,9,7"></textarea><p class="note" id="flexDemandHelp"></p></div>
+<div id="flexIndividualFields" style="display:none"><label class="fld">每天总值班工时</label><input id="flexDailyHours" placeholder="每天一个数字，逗号分隔，例如 14,16,13"><label class="fld">人员数据</label><textarea id="flexPeople" style="min-height:140px" placeholder="每行：姓名,小时工资,周期最低工时,第1天可用工时,第2天可用工时...&#10;甲,10,4,8,8"></textarea><p class="note">此规则按天分配工时，不生成具体钟点班次；可用工时列数须等于排班天数。</p></div>
+<label class="fld">自然语言快速填写需求（可选）</label><textarea id="flexNl" style="min-height:65px" placeholder="例如：第1天需要 8,10,12,10,9,7 人"></textarea><button type="button" class="btn ghost" id="flexNlBtn">识别需求并填入</button><p class="note" id="flexNlMsg">每一天写一行，请核对识别后的数字。</p>
+<button type="button" id="flexRun">计算排班</button><div id="flexResult" class="analysis"></div><div id="flexChart" class="chart"></div><div id="flexTable"></div>
+</section>
+<section id="assignmentPanel" class="panel" style="display:none"><h2>人员工位分配 </h2><p>每行一名工人：工人名,各工位每分钟效率。输入 2–7 名工人和相同数量的工位；每人仅去一站，最大化最慢工位效率。</p><label class="fld">自然语言快速填写</label><textarea id="assignNl" style="min-height:84px" placeholder="例如：工人 A 在工位 I、II、III、IV、V 的效率依次为 2、3、4、1、7"></textarea><button type="button" class="btn ghost" id="assignNlBtn">识别工人效率并填入</button><div class="note" id="assignNlMsg">本地识别明确的数字和关系；请核对下方输入后再求解。</div><textarea id="assignInput" style="height:150px" placeholder="例如：A,2,3,4&#10;B,3,4,2&#10;C,2,5,3"></textarea><button type="button" id="assignRun">枚举并求最优分配</button><div id="assignResult" class="analysis"></div><div id="assignChart" class="chart"></div><div id="assignTable"></div></section>
+  <!-- ================= COOPA 原系统 ================= -->
+  <section class="panel" id="coopaPanel" style="display:none">
+    <h2>COOPA 原系统</h2>
+    <p class="lead">仅在通过本地 COOPA 服务打开本页时可运行。密钥只保存在服务端环境变量，网页不读取、不上传、不记录密钥。此区域调用作者公开的三轮候选建模、置信度评估与求解代理，与上方本地排程相互独立。</p>
+    <div class="report" id="coopaStatus">正在检查服务状态……</div>
+    <div class="cols">
+      <div class="stack">
+        <label class="fld">模型 ID</label>
+        <input id="coopaModel" value="gpt-4.1">
+        <label class="fld">问题描述与原始数据</label>
+        <textarea id="coopaProblem" style="min-height:220px" placeholder="粘贴完整的排程/运筹优化问题：任务、资源、目标与约束，以及原始数据"></textarea>
+        <div class="note">AI 建模需要可用的模型 API；缺依赖、求解器、密钥或额度时会提示。</div>
+        <button type="button" class="btn" id="coopaRun">执行 COOPA</button>
+      </div>
+      <div class="stack">
+        <div class="subhead">运行结果与日志</div>
+        <pre id="coopaOutput" class="report" style="white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:12.5px">尚未运行。</pre>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <b>适用范围与限制：</b>本页默认纯本地运行，无需 API。标准模块支持同一订单顺序的可变工位流水（工序不可跨午休、暂不支持跨日与自由换序）；≤7 单穷举共同顺序，8–12 单两机经典流水用 Johnson。进阶模块用贪心规则排多设备/停机场景，一般不保证最优，识别为无额外约束两机流水时改用 Johnson。不同问题类型使用不同模型；有些场景只保证可行方案，不保证全局最优。
+</footer>
+
+<script>
+"use strict";
+/* ============================================================================
+   智能调度实验室 — 核心算法（已与独立 Python 版本逐条核验）
+   标准流水（含午休/停机/到达）与进阶贪心（含可选设备/停机）均通过可行性审核。
+============================================================================ */
+const el = id => document.getElementById(id);
+const PALETTE = ['#0f8f86','#e77555','#4679b9','#9461c7','#be8f28','#b95a8b','#5b9f50','#2b7a78','#c05621','#4a5568'];
+const STATION_NAMES = ['I','II','III','IV','V','VI','VII','VIII'];
+
+function toMin(x){ const a=/^(\d{1,2}):(\d{2})$/.exec(String(x).trim()); if(!a||+a[1]>23||+a[2]>59) throw Error('时间格式需为 HH:MM'); return +a[1]*60 + +a[2]; }
+function fmt(t){ return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function perms(arr){ if(arr.length<2) return [arr.slice()]; const out=[]; arr.forEach((x,i)=>{ const rest=arr.filter((_,j)=>j!==i); perms(rest).forEach(p=>out.push([x].concat(p))); }); return out; }
+
+/* Johnson：经典两机流水、最小总完工时间的全局最优排列 */
+function johnson(jobs){
+  let left=[], right=[], remain=jobs.slice();
+  while(remain.length){
+    let best=remain.reduce((a,b)=> Math.min(a.d[0],a.d[1])<=Math.min(b.d[0],b.d[1])?a:b);
+    if(best.d[0]<=best.d[1]) left.push(best); else right.unshift(best);
+    remain=remain.filter(x=>x!==best);
+  }
+  return left.concat(right);
+}
+
+/* ---------- 标准流水：单一共同顺序的模拟（含午休/到达/停机） ---------- */
+function simStandard(jobs, stationCount, seq, ctx){
+  const {start,bs,be,end,rules,block}=ctx;
+  const free=new Array(stationCount).fill(start); const done={}; const tasks=[];
+  for(const j of seq){
+    for(let k=0;k<stationCount;k++){
+      const base = k? done[j.name] : (rules[j.name]? rules[j.name].r : start);
+      let t = Math.max(free[k], base);
+      const d = j.d[k];
+      let st = (t+d<=bs && t<bs) ? t : Math.max(t, be);
+      if(block && block.k===k && st<block.b && st+d>block.a){
+        st = block.b;
+        if(st<bs && st+d>bs) st=be; else if(st>=bs && st<be) st=be;
+      }
+      if(st+d>end) return null;
+      tasks.push({j:j.name,k,st,en:st+d,d});
+      done[j.name]=free[k]=st+d;
+    }
+  }
+  const finish=Math.max.apply(null,free);
+  let late=0;
+  for(const j of jobs){ const r=rules[j.name]; const w=r?r.w:1; const due=r?r.due:end; late+=w*Math.max(0,done[j.name]-due); }
+  return {seq:seq.map(j=>j.name),tasks,finish,late,done};
+}
+
+/* 标准结果可行性独立审核：边界/先后/容量/停机/时长 */
+function auditStandard(sol, jobs, stationCount, ctx){
+  const {start,bs,be,end,block}=ctx; const v=[];
+  const byName=(j,k)=> sol.tasks.find(t=>t.j===j&&t.k===k);
+  if(sol.tasks.length!==jobs.length*stationCount) v.push('工序数量不完整');
+  for(const t of sol.tasks){
+    if(!((t.st>=start&&t.en<=bs)||(t.st>=be&&t.en<=end))) v.push(`${t.j}@${STATION_NAMES[t.k]} 跨午休或越出班次`);
+    if(t.en-t.st!==t.d) v.push(`${t.j}@${STATION_NAMES[t.k]} 时长不符`);
+    if(block&&block.k===t.k&&t.st<block.b&&t.en>block.a) v.push(`${t.j}@${STATION_NAMES[t.k]} 与停机重叠`);
+  }
+  for(const j of jobs) for(let k=0;k<stationCount-1;k++){ const a=byName(j.name,k),b=byName(j.name,k+1); if(a.en>b.st) v.push(`${j.name} 工序先后违反（${STATION_NAMES[k]}→${STATION_NAMES[k+1]}）`); }
+  for(let k=0;k<stationCount;k++){ const a=sol.tasks.filter(t=>t.k===k).sort((p,q)=>p.st-q.st); for(let i=1;i<a.length;i++) if(a[i-1].en>a[i].st) v.push(`工位 ${STATION_NAMES[k]} 容量重叠`); }
+  return v;
+}
+
+/* ============================ 标准模块 ============================ */
+let LAST_STD=null;
+function solveStandard(){
+  const err=el('stdErr');
+  try{
+    err.textContent='';
+    const stationCount=Number(el('stationCount').value), jobCount=Number(el('jobCount').value);
+    if(!Number.isInteger(stationCount)||stationCount<2||stationCount>8||!Number.isInteger(jobCount)||jobCount<1||jobCount>12||(jobCount>7&&stationCount!==2))
+      throw Error('订单数需为 1–12、工位 2–8；超过 7 单时只能使用两工位经典流水。');
+    const stations=STATION_NAMES.slice(0,stationCount);
+    const workers=stations.map((_,i)=> i<5?['D','C','E','B','A'][i]:'工人'+(i+1));
+    const jobs=el('stdJobs').value.trim().split('\n').filter(Boolean).map(s=>{
+      const a=s.split(',').map(x=>x.trim());
+      if(a.length!==stationCount+1||!a[0]||a.slice(1).some(x=>!/^\d+$/.test(x)||+x<1)) throw Error(`每个订单应有名称与 ${stationCount} 个正整数工位分钟（共 ${stationCount+1} 列）。`);
+      return {name:a[0], d:a.slice(1).map(Number)};
+    });
+    if(!jobs.length||jobs.length!==jobCount||new Set(jobs.map(x=>x.name)).size!==jobs.length) throw Error('订单数量必须与设置一致且名称唯一。');
+    let start,bs,be,end;
+    try{ [start,bs,be,end]=el('stdShift').value.split(',').map(x=>toMin(x)); }catch(e){ throw Error('班次：'+e.message); }
+    if(!(start<bs&&bs<=be&&be<end)) throw Error('班次顺序应为 上班<午休开始≤午休结束<下班。');
+    let block=null;
+    if(el('stdDowntime').value.trim()){
+      const d=el('stdDowntime').value.split(',').map(x=>x.trim());
+      if(d.length!==3||!stations.includes(d[0])) throw Error('停机格式：工位,开始,结束（工位需在已选范围内）。');
+      const a=toMin(d[1]), b=toMin(d[2]); if(a>=b) throw Error('停机开始应早于结束。');
+      block={k:stations.indexOf(d[0]),a,b};
+    }
+    const rules={};
+    for(const s of el('stdRules').value.trim().split('\n').filter(Boolean)){
+      const a=s.split(',').map(x=>x.trim());
+      if(a.length!==4||!jobs.some(j=>j.name===a[0])||!/^\d+$/.test(a[3])) throw Error('可选规则格式：订单名,到达,交期,权重（正整数权重）。');
+      const r=toMin(a[1]), due=toMin(a[2]); if(r>due) throw Error(a[0]+' 到达时间不应晚于交期。');
+      rules[a[0]]={r,due,w:+a[3]};
+    }
+    const goal=el('stdGoal').value;
+    if(jobs.length>7 && (Object.keys(rules).length||block||goal!=='finish'))
+      throw Error('8–12 单的 Johnson 求解仅适用于两工位、无到达/交期/停机、且以最早完工为目标。');
+
+    const ctx={start,bs,be,end,rules,block};
+    const useJohnson=jobs.length>7;
+    const sequences=useJohnson?[johnson(jobs)]:perms(jobs);
+    const good=[];
+    for(const seq of sequences){ const r=simStandard(jobs,stationCount,seq,ctx); if(r) good.push(r); }
+    if(!good.length) throw Error('当前班次内无可行排程，请延长班次、缩短工时或放宽规则。');
+    good.sort((a,b)=> goal==='late' ? (a.late-b.late||a.finish-b.finish) : (a.finish-b.finish||a.late-b.late));
+    const sol=good[0];
+    const violations=auditStandard(sol,jobs,stationCount,ctx);
+    if(violations.length) throw Error('规则审核未通过：'+violations.join('；'));
+
+    const makespan=sol.finish-start;
+    const util=stations.map((_,k)=> Math.round(sol.tasks.filter(t=>t.k===k).reduce((n,t)=>n+t.d,0)/(end-start-(be-bs))*100));
+    const latest=jobs.map(j=>({name:j.name,done:Math.max.apply(null,sol.tasks.filter(t=>t.j===j.name).map(t=>t.en)),due:(rules[j.name]?rules[j.name].due:end)}));
+    const bottleneck=util.indexOf(Math.max.apply(null,util));
+
+    LAST_STD={makespan,stationCount,jobCount:jobs.length,stations,workers,sol,ctx,goal,useJohnson,rules,block,util,latest,bottleneck,jobs};
+    renderStandard();
+  }catch(e){ err.textContent=e.message; }
+}
+
+function renderStandard(){
+  const S=LAST_STD, {sol,stations,workers,ctx,util,latest,bottleneck}=S;
+  const spanTotal=ctx.end-ctx.start;
+  const pos=t=> (t-ctx.start)/spanTotal*100;
+  el('rFinish').textContent=fmt(sol.finish);
+  el('rLate').textContent=sol.late+' 分';
+  el('rSeq').textContent=S.useJohnson?'Johnson':(sol.seq.length?'见下':'—');
+  el('rSpan').textContent=S.makespan+' 分';
+  el('rAlgo').innerHTML=
+    `<span class="badge info">算法：${S.useJohnson?'Johnson 规则':'穷举共同顺序'}</span>`+
+    `<span class="badge info">目标：${S.goal==='late'?'加权逾期优先，再比完工':'最早全部完工'}</span>`+
+    `<span class="badge ${S.useJohnson?'opt':'info'}">最优性：${S.useJohnson?'两机经典·全局最优':'限于各工位相同顺序的排列模型'}</span>`+
+    (S.block?`<span class="badge warn">启用停机</span>`:'')+
+    (Object.keys(S.rules).length?`<span class="badge warn">启用到达/交期/权重</span>`:'')+
+    (ctx.bs<ctx.be?`<span class="badge warn">含午休</span>`:'');
+  const ganttRows=stations.map((s,k)=>{
+    const bars=sol.tasks.filter(t=>t.k===k).map(t=>{
+      const color=PALETTE[S.jobs.findIndex(j=>j.name===t.j)%PALETTE.length];
+      return `<div class="gbar" style="left:${pos(t.st)}%;width:${Math.max(0.4,pos(t.en)-pos(t.st))}%;background:${color}" title="${esc(t.j)} 工位${s} ${fmt(t.st)}–${fmt(t.en)}（${t.d}分）">${esc(t.j)}</div>`;
+    }).join('');
+    const lunch=(ctx.be>ctx.bs&&ctx.bs>ctx.start)?`<div class="lunch" style="left:${pos(ctx.bs)}%;width:${pos(ctx.be)-pos(ctx.bs)}%"></div>`:'';
+    return `<div class="gline"><div class="glabel">工位 <b>${s}</b><br>工人 ${workers[k]}</div><div class="gtrack">${lunch}${bars}</div></div>`;
+  }).join('');
+  const axis=`<div class="gaxis" style="min-width:520px"><span>${fmt(ctx.start)}</span><span>${fmt(ctx.bs)}–${fmt(ctx.be)} 午休</span><span>${fmt(ctx.end)}</span></div>`;
+  el('rChart').innerHTML=ganttRows+axis;
+
+  el('rAnalysis').innerHTML=
+    `<b>推荐顺序：</b>${sol.seq.map(esc).join(' → ')}。<br>`+
+    `共安排 ${sol.tasks.length} 道工序；已独立审核班次边界、同订单工序先后、工位容量与停机重叠，全部通过。`+
+    (S.useJohnson?` 两机且无额外规则时，Johnson 规则对最小总完工时间给出全局最优排列。`:` 最优性仅限“各工位采用相同订单顺序”的排列流水模型，含午休/停机时目标为该约束下的最优。`);
+
+  el('rCards').innerHTML=
+    `<div class="card"><b>最忙工位</b><br>工位 ${stations[bottleneck]}：占可用班次 ${util[bottleneck]}%（瓶颈）。</div>`+
+    `<div class="card"><b>各工位负荷</b><br>${stations.map((x,i)=>esc(x)+' '+util[i]+'%').join(' · ')}。</div>`+
+    `<div class="card"><b>交期分析</b><br>${latest.map(x=>esc(x.name)+' 完成 '+fmt(x.done)+(x.done>x.due?'（逾期 '+(x.done-x.due)+' 分）':'（准时）')).join('；')}。</div>`+
+    `<div class="card"><b>规则与风险</b><br>${S.block?'工位 '+stations[S.block.k]+' 于 '+fmt(S.block.a)+'–'+fmt(S.block.b)+' 停机；':''}共同顺序模型，未计换线、物料与跨日。</div>`;
+
+  el('rTable').innerHTML='<thead><tr><th>订单</th><th>工位</th><th>工人</th><th>开始</th><th>结束</th><th>分钟</th></tr></thead><tbody>'+
+    sol.tasks.slice().sort((a,b)=>a.st-b.st||a.k-b.k).map(t=>`<tr><td>${esc(t.j)}</td><td>${stations[t.k]}</td><td>${workers[t.k]}</td><td>${fmt(t.st)}</td><td>${fmt(t.en)}</td><td>${t.d}</td></tr>`).join('')+'</tbody>';
+}
+
+function downloadStandard(){
+  if(!LAST_STD){ el('stdErr').textContent='请先生成排程。'; return; }
+  const S=LAST_STD; const head=[
+    `# 智能调度实验室 · 标准流水排程结果`,'',
+    `生成时间,${new Date().toLocaleString('zh-CN')}`,
+    `订单数,${S.jobCount}`,`工位数,${S.stationCount}`,
+    `班次,${fmt(S.ctx.start)}-${fmt(S.ctx.end)}（午休 ${fmt(S.ctx.bs)}-${fmt(S.ctx.be)}）`,
+    `优化目标,${S.goal==='late'?'加权逾期优先':'最早全部完工'}`,
+    `算法,${S.useJohnson?'Johnson 规则（两机经典）':'穷举共同顺序'}`,
+    `最优性声明,${S.useJohnson?'两机、同时可用、无额外规则时最小总完工时间全局最优':'限于各工位相同顺序的排列模型'}`,
+    `全部完工,${fmt(S.sol.finish)}（跨度 ${S.makespan} 分）`,`加权逾期,${S.sol.late} 分`,
+    `启用规则,${[S.block?'单工位停机':null,Object.keys(S.rules).length?'到达/交期/权重':null,S.ctx.bs<S.ctx.be?'午休':null].filter(Boolean).join('、')||'无'}`,
+    `数据来源,用户自设或练习模板`,'',
+    `订单,工位,工人,开始,结束,持续分钟`
+  ].join('\n');
+  const body=S.sol.tasks.slice().sort((a,b)=>a.st-b.st||a.k-b.k).map(t=>[t.j,S.stations[t.k],S.workers[t.k],fmt(t.st),fmt(t.en),t.d].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+head+'\n'+body],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='标准流水排程.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* 调整输入表 */
+el('stdResize').addEventListener('click',()=>{
+  const n=Number(el('jobCount').value), m=Number(el('stationCount').value);
+  if(!Number.isInteger(n)||n<1||n>12||!Number.isInteger(m)||m<2||m>8||(n>7&&m!==2)){ el('stdErr').textContent='订单数需 1–12、工位 2–8；超过 7 单只能两工位。'; return; }
+  const old=el('stdJobs').value.trim().split('\n').filter(Boolean).map(x=>x.split(',').map(y=>y.trim()));
+  el('stdJobs').value=Array.from({length:n},(_,i)=>{
+    const row=old[i]||[]; const cells=[row[0]||String.fromCharCode(65+i)];
+    for(let k=0;k<m;k++) cells.push(row[k+1]&&/^\d+$/.test(row[k+1])?row[k+1]:'40');
+    return cells.join(',');
+  }).join('\n');
+  el('stdErr').textContent=''; el('presetInfo').innerHTML='<span class="okline">输入表已调整</span>：新增工位时长暂填 40 分钟，请按实际需求修改后再生成排程。';
+});
+
+/* 六个演示模板 */
+const PRESETS=[
+ {desc:'<b>基础流水线</b>：4 个订单 A–D 均在 08:00 可开工，依次经过工位 I→V，各工位分钟不同。目标为全部订单尽早完成；午休 12:00–13:00；无额外交期或停机。',
+  jobs:'A,35,45,35,40,30\nB,45,40,50,35,45\nC,30,50,40,45,35\nD,40,35,45,40,50', rules:'', down:'', goal:'finish'},
+ {desc:'<b>紧急插单</b>：订单 U 在 09:00 才到达、交期 13:00、逾期权重 5，其余 3 单权重 1。目标优先减少加权逾期再比完工，可观察急单是否需要插到队首。可改：到达时间、交期、权重、目标。',
+  jobs:'A,35,45,35,40,30\nB,45,40,50,35,45\nC,30,50,40,45,35\nU,35,35,30,30,25', rules:'U,09:00,13:00,5', down:'', goal:'late'},
+ {desc:'<b>交期压力</b>：4 单工时各异，A 交期 14:30 权重 3、B 交期 15:00 权重 2。目标优先减少加权逾期。用于观察交期与优先级如何改变作业顺序。',
+  jobs:'A,50,45,40,45,35\nB,45,50,45,40,40\nC,40,40,50,45,45\nD,35,55,40,50,35', rules:'A,08:00,14:30,3\nB,08:00,15:00,2', down:'', goal:'late'},
+ {desc:'<b>工位停机</b>：在基础数据上，工位 III 于 10:00–11:00 停机，期间不得加工。目标仍为尽早完成。可与基础场景对比停机对等待与完工的影响。',
+  jobs:'A,35,45,35,40,30\nB,45,40,50,35,45\nC,30,50,40,45,35\nD,40,35,45,40,50', rules:'', down:'III,10:00,11:00', goal:'finish'},
+ {desc:'<b>多订单高负荷</b>：5 个订单共 25 道工序，比基础多一单，全部 08:00 可开工。目标尽早完成，重点观察设备负荷、排队与最忙工位。',
+  jobs:'A,35,40,35,40,30\nB,40,35,45,35,40\nC,30,45,40,40,35\nD,35,30,40,35,45\nE,30,35,35,40,30', rules:'', down:'', goal:'finish'},
+ {desc:'<b>错峰到达</b>：订单 C 在 09:00、D 在 10:00 才可开工，D 交期 16:30 权重 2。目标尽早完成，并检查每道工序开始不早于到达时间。',
+  jobs:'A,35,45,35,40,30\nB,45,40,50,35,45\nC,30,50,40,45,35\nD,40,35,45,40,50', rules:'C,09:00,16:00,1\nD,10:00,16:30,2', down:'', goal:'finish'}
+];
+function applyPreset(i){
+  const p=PRESETS[i];
+  el('stdJobs').value=p.jobs; el('jobCount').value=p.jobs.split('\n').length; el('stationCount').value=5;
+  el('stdRules').value=p.rules; el('stdDowntime').value=p.down; el('stdGoal').value=p.goal;
+  el('stdShift').value='08:00,12:00,13:00,17:00';
+  el('presetInfo').innerHTML=p.desc+'<br><span class="note">模板仅供练习；可以修改全部输入。</span>';
+  document.querySelectorAll('#stdPreset [data-preset]').forEach(b=>b.classList.toggle('active',Number(b.dataset.preset)===i));
+  solveStandard();
+}
+document.querySelectorAll('#stdPreset [data-preset]').forEach(b=>b.addEventListener('click',()=>applyPreset(Number(b.dataset.preset))));
+el('stdRun').addEventListener('click',solveStandard);
+el('rDownload').addEventListener('click',downloadStandard);
+
+/* 标准自然语言解析：仅接受 name,a,b 两工位 */
+el('stdNlBtn').addEventListener('click',()=>{
+  const rows=el('stdNl').value.trim().split(/\n/).map(x=>x.trim()).filter(Boolean);
+  const items=rows.map(x=>x.split(/[,，]/).map(y=>y.trim())).filter(x=>x.length===3&&x[0]&&/^\d+$/.test(x[1])&&/^\d+$/.test(x[2])&&+x[1]>0&&+x[2]>0);
+  if(items.length&&items.length===rows.length&&items.length<=12&&new Set(items.map(x=>x[0])).size===items.length){
+    el('jobCount').value=items.length; el('stationCount').value=2;
+    el('stdJobs').value=items.map(x=>x.join(',')).join('\n');
+    el('stdNlMsg').textContent=`已识别 ${items.length} 个订单、两工位；请核对班次与规则后点“生成排程”。`;
+  } else if(items.length!==rows.length){
+    el('stdNlMsg').textContent=`共 ${rows.length} 行，成功 ${items.length} 行。仅支持每行“订单名,第一工位分钟,第二工位分钟”，例如 J1,30,70；其余行未识别，未改动表格。`;
+  } else {
+    el('stdNlMsg').textContent='名称需唯一且不超过 12 单；自由叙述建模需要模型服务，本模块不会猜测缺失的时长/班次/交期。';
+  }
+});
+
+/* ============================ 进阶模块 ============================ */
+function earliest(t,d,m,ctx,downs){
+  for(const [lo,hi] of [[ctx.start,ctx.bs],[ctx.be,ctx.end]]){
+    let v=Math.max(t,lo);
+    while(v+d<=hi){
+      const hit=(downs[m]||[]).find(([a,b])=>v<b&&v+d>a);
+      if(!hit) return v;
+      v=hit[1];
+    }
+  }
+  return null;
+}
+let LAST_ADV=null;
+function advancedRun(){
+  const err=el('advErr');
+  try{
+    err.textContent='';
+    let start,bs,be,end;
+    try{ [start,bs,be,end]=el('advShift').value.split(',').map(x=>toMin(x)); }catch(e){ throw Error('班次：'+e.message); }
+    if(!(start<bs&&bs<=be&&be<end)) throw Error('班次顺序应为 上班<午休开始≤午休结束<下班。');
+    const ctx={start,bs,be,end};
+    const orders={};
+    for(const line of el('advOrders').value.trim().split('\n').filter(Boolean)){
+      const a=line.split(',').map(x=>x.trim());
+      if(a.length!==4||!a[0]||orders[a[0]]) throw Error('订单规则须为：唯一订单名,到达,交期,优先级。');
+      const rel=toMin(a[1]), due=toMin(a[2]), pr=Number(a[3]);
+      if(!Number.isFinite(pr)||pr<=0) throw Error('优先级须为大于 0 的数。');
+      if(rel>due) throw Error(a[0]+' 到达不应晚于交期。');
+      orders[a[0]]={release:rel,due,priority:pr,steps:[]};
+    }
+    const ops=[];
+    for(const line of el('advOps').value.trim().split('\n').filter(Boolean)){
+      const a=line.split(',').map(x=>x.trim());
+      if(a.length!==4||!orders[a[0]]) throw Error('工序中的订单名未在订单规则中定义。');
+      const d=Number(a[2]); const machines=a[3].split('|').map(x=>x.trim()).filter(Boolean);
+      if(!a[1]||!Number.isInteger(d)||d<1||!machines.length) throw Error('工序需要名称、正整数时长和至少一台设备。');
+      const op={job:a[0],name:a[1],d,machines,index:orders[a[0]].steps.length};
+      orders[a[0]].steps.push(op); ops.push(op);
+    }
+    if(!ops.length||Object.values(orders).some(o=>!o.steps.length)) throw Error('每个订单至少需要一道工序。');
+    if(ops.length>60) throw Error('最多支持 60 道工序。');
+    const downs={};
+    for(const line of el('advDown').value.trim().split('\n').filter(Boolean)){
+      const a=line.split(',').map(x=>x.trim()); if(a.length!==3) throw Error('停机格式：设备,开始,结束。');
+      const lo=toMin(a[1]), hi=toMin(a[2]); if(lo>=hi) throw Error('停机开始应早于结束。');
+      (downs[a[0]]=downs[a[0]]||[]).push([lo,hi]);
+    }
+    const devices=[...new Set(ops.flatMap(o=>o.machines))].sort();
+
+    /* 识别无额外约束的固定两机经典流水 → 走 Johnson 内核（与标准模块一致） */
+    const entries=Object.entries(orders);
+    const firstM=entries[0] && entries[0][1].steps[0] && entries[0][1].steps[0].machines[0];
+    const secondM=entries[0] && entries[0][1].steps[1] && entries[0][1].steps[1].machines[0];
+    const classic=entries.length>0 && firstM && secondM && firstM!==secondM &&
+      Object.keys(downs).length===0 &&
+      entries.every(([,o])=>o.steps.length===2 && o.steps[0].machines.length===1 && o.steps[1].machines.length===1 &&
+        o.steps[0].machines[0]===firstM && o.steps[1].machines[0]===secondM && o.release<=start) &&
+      new Set(entries.map(([,o])=>o.due)).size===1 &&
+      new Set(entries.map(([,o])=>o.priority)).size===1;
+    let classicOk=false, jSeq=null;
+    if(classic){
+      const jjobs=entries.map(([name,o])=>({name,d:[o.steps[0].d,o.steps[1].d]}));
+      jSeq=johnson(jjobs);
+      let fa=start,fb=start;
+      for(const j of jSeq){ fa=fa+j.d[0]; fb=Math.max(fa,fb)+j.d[1]; }
+      const lunchLen=Math.max(0,be-bs);
+      classicOk=(lunchLen===0)||(fb<=bs);   // 无午休，或整条排程在午休前结束（Johnson 忽略午休）
+    }
+
+    let tasks=[], done={}, next={}, unscheduled=null;
+    if(classic && classicOk){
+      let mA=start, mB=start;
+      for(const j of jSeq){
+        const o=orders[j.name], a=o.steps[0], b=o.steps[1];
+        const sa=mA, ea=sa+a.d, sb=Math.max(ea,mB), eb=sb+b.d;
+        tasks.push({op:a,m:firstM,st:sa,en:ea},{op:b,m:secondM,st:sb,en:eb});
+        mA=ea; mB=eb; done[j.name]=eb;
+      }
+      Object.keys(orders).forEach(k=>{next[k]=2;});
+    } else {
+      const free=Object.fromEntries(devices.map(x=>[x,start]));
+      done=Object.fromEntries(Object.keys(orders).map(k=>[k,orders[k].release]));
+      next=Object.fromEntries(Object.keys(orders).map(k=>[k,0]));
+      const total=ops.length;
+      while(tasks.length<total){
+        const choices=[];
+        for(const [job,o] of Object.entries(orders)){
+          const op=o.steps[next[job]]; if(!op) continue;
+          for(const m of op.machines){
+            const st=earliest(Math.max(done[job],free[m]),op.d,m,ctx,downs);
+            if(st!==null) choices.push({op,m,st,en:st+op.d,due:o.due,priority:o.priority});
+          }
+        }
+        if(!choices.length){ unscheduled=ops.filter(o=>next[o.job]<=o.index).map(o=>o.job+' / '+o.name); break; }
+        choices.sort((a,b)=>a.st-b.st||a.due-b.due||b.priority-a.priority||a.en-b.en);
+        const c=choices[0]; tasks.push(c); free[c.m]=c.en; done[c.op.job]=c.en; next[c.op.job]++;
+      }
+    }
+
+    /* 独立可行性审核（贪心与 Johnson 两条路径都过一遍） */
+    const vio=[];
+    for(const t of tasks){
+      const o=orders[t.op.job];
+      if(t.st<o.release) vio.push(`${t.op.job}/${t.op.name} 早于到达`);
+      if(!((t.st>=start&&t.en<=bs)||(t.st>=be&&t.en<=end))) vio.push(`${t.op.job}/${t.op.name} 跨午休或越界`);
+      if(t.en-t.st!==t.op.d) vio.push(`${t.op.job}/${t.op.name} 时长不符`);
+      if(!t.op.machines.includes(t.m)) vio.push(`${t.op.job}/${t.op.name} 设备越权`);
+      for(const [a,b] of (downs[t.m]||[])) if(t.st<b&&t.en>a) vio.push(`${t.op.job}/${t.op.name} 与 ${t.m} 停机重叠`);
+    }
+    for(const m of devices){ const a=tasks.filter(t=>t.m===m).sort((p,q)=>p.st-q.st); for(let i=1;i<a.length;i++) if(a[i-1].en>a[i].st) vio.push(`设备 ${m} 容量重叠`); }
+    for(const [job,o] of Object.entries(orders)){ const seq=o.steps.map(st=>tasks.find(t=>t.op===st)).filter(Boolean).sort((p,q)=>p.op.index-q.op.index); for(let i=1;i<seq.length;i++) if(seq[i-1].en>seq[i].st) vio.push(`${job} 工序先后违反`); }
+    if(vio.length) throw Error('排程可行性审核发现问题：'+[...new Set(vio)].join('；'));
+
+    const late=Object.entries(orders).map(([job,o])=>({job,end:done[job],due:o.due,delay:Math.max(0,done[job]-o.due),weight:o.priority}));
+    const weighted=late.reduce((s,x)=>s+x.delay*x.weight,0);
+    const finish=Math.max.apply(null,tasks.map(t=>t.en).concat([start]));
+    const util=devices.map(m=>({m,minutes:tasks.filter(t=>t.m===m).reduce((n,t)=>n+t.op.d,0)}));
+
+    LAST_ADV={tasks,ops,orders,devices,classic,classicOk,unscheduled,weighted,finish,late,util,start,bs,be,end,scheduled:tasks.length,total:ops.length,makespan:finish-start};
+    renderAdvanced();
+  }catch(e){ err.textContent=e.message; }
+}
+
+function renderAdvanced(){
+  const A=LAST_ADV;
+  el('advStats').innerHTML=
+    `<div class="stat">已排工序<b>${A.scheduled}/${A.total}</b></div>`+
+    `<div class="stat">全部完工<b>${fmt(A.finish)}</b></div>`+
+    `<div class="stat">跨度<b>${A.makespan} 分</b></div>`+
+    `<div class="stat">加权逾期<b>${A.unscheduled?'未计算':A.weighted+' 分'}</b></div>`;
+  const useJohnson=A.classic&&A.classicOk;
+  el('advAlgo').innerHTML=
+    `<span class="badge info">算法：${useJohnson?'Johnson 规则（识别为无额外约束两机流水）':'贪心规则（最早可行开始，交期/优先级破并列）'}</span>`+
+    `<span class="badge ${useJohnson?'opt':'heur'}">最优性：${useJohnson?'两机经典·最小总完工时间全局最优':'可行方案，不保证全局最优'}</span>`+
+    `<span class="badge info">目标：尽早安排，兼顾交期与优先级</span>`+
+    (A.unscheduled?`<span class="badge warn">${A.unscheduled.length} 道工序未排</span>`:'')+
+    `<span class="badge warn">设备容量=1 · 不可跨午休/停机</span>`;
+
+  el('advAudit').innerHTML=
+    `<div class="card"><b>① 输入完整性</b><br>${Object.keys(A.orders).length} 个订单、${A.total} 道工序、${A.devices.length} 台候选设备；到达、交期、优先级、时长与设备集合均通过校验。</div>`+
+    `<div class="card"><b>② 数学模型</b><br>决策：每道工序选设备与开始时间。约束：同订单工序先后、设备同一时刻容量 1、到达、班次与停机。目标：完工/逾期。</div>`+
+    `<div class="card"><b>③ 求解路径</b><br>${useJohnson?'识别为经典两机流水，转 Johnson 内核，与标准模块共用同一算法。':'贪心逐步选择最早可行的（工序,设备）。未调用 COOPA 的 LLM 候选建模与代理求解。'}</div>`+
+    `<div class="card"><b>④ 方案审核</b><br>${A.unscheduled?'未排 '+A.unscheduled.length+' 道：'+A.unscheduled.map(esc).join('、')+'（设备/剩余班次时间不足）。':'全部 '+A.tasks.length+' 道工序通过到达、先后、设备容量、班次与停机的独立复核。'}</div>`;
+
+  el('advReport').innerHTML=
+    `<b>${A.unscheduled?'部分工序未排入班次':'全部工序已排入可用时间'}</b><br>`+
+    `交期：${A.late.map(x=>esc(x.job)+' '+(x.delay?'逾期 '+x.delay+' 分':'准时')).join('；')}。<br>`+
+    `设备加工时长：${A.util.map(x=>esc(x.m)+' '+x.minutes+' 分').join('；')}。<br>`+
+    (useJohnson?'本题满足两机流水无额外约束条件，Johnson 规则对最小总完工时间保证最优。':'本方案按最早可行开始时间贪心安排，用交期与优先级破并列；属启发式结果，不保证最优。');
+
+  const spanTotal=A.end-A.start; const pos=t=>(t-A.start)/spanTotal*100;
+  const lunch=(A.be>A.bs&&A.bs>A.start)?`<div class="lunch" style="left:${pos(A.bs)}%;width:${pos(A.be)-pos(A.bs)}%"></div>`:'';
+  el('advChart').innerHTML=A.devices.map(m=>{
+    const bars=A.tasks.filter(t=>t.m===m).map(t=>{
+      const color=PALETTE[Object.keys(A.orders).indexOf(t.op.job)%PALETTE.length];
+      return `<div class="gbar" style="left:${pos(t.st)}%;width:${Math.max(0.4,pos(t.en)-pos(t.st))}%;background:${color}" title="${esc(t.op.job)} / ${esc(t.op.name)} ${fmt(t.st)}–${fmt(t.en)}">${esc(t.op.job)}</div>`;
+    }).join('');
+    return `<div class="gline"><div class="glabel">设备 <b>${esc(m)}</b></div><div class="gtrack">${lunch}${bars}</div></div>`;
+  }).join('')+`<div class="gaxis"><span>${fmt(A.start)}</span><span>${fmt(A.bs)}–${fmt(A.be)} 午休</span><span>${fmt(A.end)}</span></div>`;
+
+  el('advTable').innerHTML='<thead><tr><th>订单</th><th>工序</th><th>设备</th><th>开始</th><th>结束</th><th>分钟</th></tr></thead><tbody>'+
+    A.tasks.slice().sort((a,b)=>a.st-b.st).map(t=>`<tr><td>${esc(t.op.job)}</td><td>${esc(t.op.name)}</td><td>${esc(t.m)}</td><td>${fmt(t.st)}</td><td>${fmt(t.en)}</td><td>${t.op.d}</td></tr>`).join('')+'</tbody>';
+}
+el('advRun').addEventListener('click',advancedRun);
+
+el('advNlBtn').addEventListener('click',()=>{
+  const lines=el('advNl').value.split(/\n/).map(x=>x.trim()).filter(Boolean);
+  const orders=[],ops=[],downs=[],unread=[];
+  for(const line of lines){ let m;
+    if((m=line.match(/^订单\s*(\S+?)\s*[，,]\s*(\d{1,2}:\d{2})\s*到达\s*[，,]\s*(\d{1,2}:\d{2})\s*交期\s*[，,]\s*优先级\s*(\d+)$/))){ orders.push([m[1],m[2],m[3],m[4]].join(',')); continue; }
+    if((m=line.match(/^(\S+?)\s*的\s*(\S+?)\s*工序\s*需要\s*(\d+)\s*分钟\s*[，,]\s*(?:可用|只能用)\s*(.+)$/))){ const dev=m[4].replace(/\s*或\s*/g,'|').replace(/\s*\|\s*/g,'|').trim(); ops.push([m[1],m[2],m[3],dev].join(',')); continue; }
+    if((m=line.match(/^(\S+?)\s*从\s*(\d{1,2}:\d{2})\s*到\s*(\d{1,2}:\d{2})\s*停机$/))){ downs.push([m[1],m[2],m[3]].join(',')); continue; }
+    unread.push(line);
+  }
+  if(orders.length&&ops.length){ el('advOrders').value=orders.join('\n'); el('advOps').value=ops.join('\n'); el('advDown').value=downs.join('\n'); }
+  el('advNlMsg').textContent=`识别 ${orders.length} 个订单、${ops.length} 道工序、${downs.length} 个停机窗。${unread.length?'未识别：'+unread.map(esc).join('；')+'。':(orders.length&&ops.length?'请核对工序顺序、设备名与班次，再点“生成并审核排程”。':'至少需明确的订单与工序，表格未改动。')}`;
+});
+
+/* ============================ 标签切换 ============================ */
+let lastProduction='standard';
+function showTab(name){
+  const production=['standard','advanced','assignment'].includes(name);
+  if(production)lastProduction=name;
+  for(const key of ['standard','advanced','assignment','staff','project','coopa']) el(key+'Panel').style.display=name===key?'':'none';
+  el('productionTabs').style.display=production?'flex':'none';
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',production?b.dataset.group==='production':b.dataset.tab===name));
+  document.querySelectorAll('#productionTabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+}
+document.querySelectorAll('#tabs [data-tab],#productionTabs [data-tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+document.querySelector('#tabs [data-group="production"]').addEventListener('click',()=>showTab(lastProduction));
+
+/* ============================ COOPA 服务（可选） ============================ */
+async function checkCoopa(){
+  const box=el('coopaStatus');
+  try{
+    const r=await fetch('/api/coopa/status',{cache:'no-store'}); if(!r.ok) throw Error('服务未响应');
+    const x=await r.json();
+    box.innerHTML=x.ready?'<span class="okline">COOPA 服务已就绪</span>，可提交题目（密钥仅存服务端环境变量）。':
+      '服务尚未就绪。缺少依赖：'+(x.missing_packages&&x.missing_packages.join('、')||'无')+'；线性求解器：'+(x.glpk_available?'GLPK':(x.highs_available?'HiGHS':'未安装'))+'；模型 API：'+(x.model_key_configured?'已配置':'未配置')+'。';
+  }catch(e){
+    box.innerHTML='求解服务暂时无法连接。请稍后刷新页面；生产、人员及项目模块中的浏览器内功能仍可尝试使用。';
+  }
+}
+el('coopaRun').addEventListener('click',async()=>{
+  const box=el('coopaOutput'); box.textContent='COOPA 正在建模与求解，请稍候……';
+  try{
+    const r=await fetch('/api/coopa/solve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:el('coopaModel').value,problem:el('coopaProblem').value})});
+    const x=await r.json();
+    if(r.ok){ box.textContent=`求解结果：${x.result}\n建模轮数：${x.iterations}\n运行编号：${x.run_id}\n候选模型：\n${JSON.stringify(x.formulation,null,2)}\n评分：\n${JSON.stringify(x.evaluation,null,2)}`; }
+    else { box.textContent='运行失败（'+ (r.status) +'）：'+x.error+(x.missing_packages?('\n缺少依赖：'+x.missing_packages.join('、')):''); }
+  }catch(e){ box.textContent='连接失败：'+e.message+'。请确认本地服务已启动。'; }
+});
+
+/* ============================ 初始化 ============================ */
+
+
+
+showTab('standard');
+checkCoopa();
+</script>
+<script>
+(function(){
+ const raw=[['a',10,''],['b',8,''],['c',6,'a|b'],['d',16,'b'],['e',24,'c'],['f',4,'d|e'],['g',4,'f'],['h',10,'f'],['i',4,'f'],['j',12,'g'],['k',16,'h|i|j'],['L',8,'c'],['m',24,'L'],['n',4,'k|m']];
+ 
+ el('projectRun').onclick=()=>{try{let data=el('projectInput').value.trim().split('\n').filter(Boolean).map(line=>{let a=line.split(',').map(x=>x.trim());if(a.length!==3||!a[0]||!Number.isFinite(+a[1])||+a[1]<=0)throw Error('活动格式须为：名称,正数持续时间,前置活动');return{id:a[0],d:+a[1],pred:a[2]?a[2].split('|').map(x=>x.trim()):[]}});if(!data.length)throw Error('请至少输入一项活动');let map=new Map(data.map(x=>[x.id,x]));if(map.size!==data.length)throw Error('活动名称重复');for(let x of data)for(let y of x.pred)if(!map.has(y))throw Error('未定义前置活动：'+y);let pending=new Set(map.keys()),order=[];while(pending.size){let ready=[...pending].filter(id=>map.get(id).pred.every(x=>!pending.has(x)));if(!ready.length)throw Error('前置活动构成循环，无法排程');for(let id of ready){order.push(id);pending.delete(id)}}let start={},end={};for(let id of order){let x=map.get(id);start[id]=Math.max(0,...x.pred.map(y=>end[y]));end[id]=start[id]+x.d}let finish=Math.max(...Object.values(end)),latestEnd={};for(let id of order.slice().reverse()){let successors=data.filter(x=>x.pred.includes(id));latestEnd[id]=successors.length?Math.min(...successors.map(x=>latestEnd[x.id]-x.d)):finish}let rows=order.map(id=>({id,start:start[id],end:end[id],slack:latestEnd[id]-end[id]}));el('projectResult').textContent='最短工期：'+finish+' 天；关键活动：'+rows.filter(x=>Math.abs(x.slack)<1e-8).map(x=>x.id).join(' → ')+'。';el('projectChart').innerHTML=rows.map(x=>'<div class="line"><div class="station">'+x.id+'</div><div class="track"><div class="bar" style="left:'+(x.start/finish*100)+'%;width:'+((x.end-x.start)/finish*100)+'%;background:'+(x.slack===0?'#dc6b43':'#2b7dab')+'">'+x.id+'</div></div></div>').join('');el('projectTable').innerHTML='<table><tr><th>活动</th><th>开始日</th><th>结束日</th><th>时长</th><th>浮动天数</th></tr>'+rows.map(x=>'<tr><td>'+x.id+'</td><td>'+x.start+'</td><td>'+x.end+'</td><td>'+(x.end-x.start)+'</td><td>'+x.slack+'</td></tr>').join('')+'</table>'}catch(e){el('projectResult').textContent=e.message}};
+ 
+})();
+</script>
+<script>
+(function(){
+ const original='A,2,3,4,1,7\nB,3,4,2,5,6\nC,2,5,3,4,1\nD,5,2,3,2,5\nE,3,7,6,2,4';
+ el('assignRun').onclick=()=>{try{let rows=el('assignInput').value.trim().split('\n').map(x=>x.split(',').map(y=>y.trim()));if(rows.length!==5||rows.some(x=>x.length!==6||!x[0]||x.slice(1).some(v=>!Number.isFinite(+v)||+v<0))||new Set(rows.map(x=>x[0])).size!==5)throw Error('需要五名不同工人，每行提供五个非负效率');let best=-1,winners=[];function walk(a,used){if(a.length===5){let val=Math.min(...a.map((worker,station)=>+rows[worker][station+1]));if(val>best){best=val;winners=[a.slice()]}else if(val===best)winners.push(a.slice());return}for(let i=0;i<5;i++)if(!used.has(i)){used.add(i);a.push(i);walk(a,used);a.pop();used.delete(i)}}walk([],new Set);let a=winners[0],vals=a.map((worker,station)=>+rows[worker][station+1]);el('assignResult').textContent='最大瓶颈效率：'+best+' 件/分；共枚举 120 种一对一分配，达到最优的方案 '+winners.length+' 种。';el('assignChart').innerHTML=a.map((worker,i)=>'<div class="line"><div class="station">工位 '+['I','II','III','IV','V'][i]+'</div><div class="track"><div class="bar" style="left:0;width:'+(vals[i]/Math.max(...vals)*100)+'%;background:'+(vals[i]===best?'#dc6b43':'#2b7dab')+'">'+rows[worker][0]+' · '+vals[i]+'</div></div></div>').join('');el('assignTable').innerHTML='<table><tr><th>工位</th><th>工人</th><th>效率（件/分）</th></tr>'+a.map((worker,i)=>'<tr><td>'+['I','II','III','IV','V'][i]+'</td><td>'+rows[worker][0]+'</td><td>'+vals[i]+'</td></tr>').join('')+'</table>'}catch(e){el('assignResult').textContent=e.message}};
+ 
+})();
+</script>
+<script>
+(function(){
+ function result(id,msg){el(id+'Msg').textContent=msg}
+ el('projectNlBtn').onclick=()=>{let lines=el('projectNl').value.split(/\n/).map(x=>x.trim()).filter(Boolean),out=[],bad=[];for(let line of lines){let m=line.match(/^任务\s*(\S+?)\s*持续\s*(\d+(?:\.\d+)?)\s*天\s*[，,]\s*(?:无前置任务|前置任务\s*(.+))$/);if(!m){bad.push(line);continue}let pred=m[3]?m[3].split(/\s*(?:和|、|\||,)\s*/).filter(Boolean).join('|'):'';out.push([m[1],m[2],pred].join(','))}if(out.length&&bad.length===0){el('projectInput').value=out.join('\n');result('projectNl','已填入 '+out.length+' 项活动。请核对前置关系后计算关键路径。')}else result('projectNl','未改动输入。'+(bad.length?'未识别：'+bad.join('；'):'请输入任务描述。'))};
+ el('assignNlBtn').onclick=()=>{let lines=el('assignNl').value.split(/\n/).map(x=>x.trim()).filter(Boolean),out=[],bad=[];for(let line of lines){let m=line.match(/^工人\s*(\S+?)\s*在工位\s*I[、,，]II[、,，]III[、,，]IV[、,，]V\s*的效率依次为\s*(.+)$/);let vals=m?.[2].split(/[、,，]/).map(x=>x.trim());if(!m||vals.length!==5||vals.some(x=>!/^\d+(?:\.\d+)?$/.test(x))){bad.push(line);continue}out.push([m[1],...vals].join(','))}if(out.length===5&&!bad.length&&new Set(out.map(x=>x.split(',')[0])).size===5){el('assignInput').value=out.join('\n');result('assignNl','已填入五名工人的工位效率。请核对后求解。')}else result('assignNl','未改动输入。请按示例写五名不同工人。'+(bad.length?'未识别：'+bad.join('；'):''))};
+})();
+</script>
+<script>
+(function(){
+ const schema={
+  'IndustryOR-035':{times:[[null,null,null],[null,null,null]]},
+  'IndustryOR-074':{tasks:[{id:'A',duration:null,pred:[]},{id:'B',duration:null,pred:['A']}],daily_cost:null,rental_cost:null,rental_start:'A',rental_end:'B'},
+  'BWOR-053':{wages:[null,null,null,null,null,null],available:Array.from({length:6},()=>[null,null,null,null,null]),daily_hours:null,weekly_min:[null,null,null,null,null,null]},
+  'BWOR-079':{demand:[null,null,null,null,null]},
+  'ComplexLP-179':{demand:[null,null,null,null,null,null,null]},
+  'ComplexLP-180':{demand:[null,null,null,null,null,null,null]}
+ };
+ const help={'IndustryOR-035':'times：每行一批产品、每列一台机器时长（小时）；可设置 1–8 批、2–4 台机器。','IndustryOR-074':'tasks：活动名称、时长及前置活动，可增减活动；daily_cost：项目每天成本；rental_cost：设备日租金；rental_start/end：租赁起止活动。','BWOR-053':'wages：每人小时工资；available：每人×周一至周五可用小时；daily_hours：每日值班需求；weekly_min：每人每周最低小时。可增减人员，数组行数保持一致。','BWOR-079':'demand：五个连续时段需求；每人连续五天依次轮换班次。','ComplexLP-179':'demand：七天需求；允许分数人数的线性松弛。','ComplexLP-180':'demand：七天需求；允许分数人数的线性松弛。'};
+ for(const panel of document.querySelectorAll('.case-config')){
+  const select=panel.querySelector('[data-extra-select]'),wrap=panel.querySelector('[data-extra-editor]'),editor=panel.querySelector('[data-extra-config]'),out=panel.querySelector('[data-extra-output]'),base=panel.parentElement;
+  function change(){const active=!!select.value;wrap.style.display=active?'block':'none';for(const child of base.children)if(child!==panel&&child.tagName!=='H2')child.style.display=active?'none':'';const summary=panel.querySelector('[data-type-summary]');if(summary){const descriptions={'IndustryOR-035':'适合订单依次经过相同机器、全天连续加工且工时可为小数小时；不处理班次、午休与停机。','BWOR-053':'适合已知每个人的每日可用工时、工资和每周最低工时，安排一周的值班工时。','BWOR-079':'适合每天重复五类班次、人员按固定规则跨周轮换，要求各班次人数为整数。','ComplexLP-179':'适合七天逐日覆盖、每人连续工作五天的容量估算；结果可能是分数人数。'};summary.textContent=active?descriptions[select.value]:(base.id==='standardPanel'?'适合有每日班次、午休、停机或交期的订单；工时填整数分钟。':'适合单日内六个时段的人数覆盖，选择最低人数或最低工资。')}if(active){editor.value=JSON.stringify(schema[select.value],null,2);panel.querySelector('[data-extra-help]').textContent=help[select.value]+' 把 null 换成自己的数值；此处不自动载入任何题库数据。';out.textContent='填好参数后点击求解。'}}
+  select.addEventListener('change',change);
+  panel.querySelector('[data-extra-run]').addEventListener('click',async()=>{try{if(!select.value)throw Error('请选择问题类型');let config=JSON.parse(editor.value);if(JSON.stringify(config).includes('null'))throw Error('请将所有 null 填成数值');out.textContent='正在求解……';let r=await fetch('/api/paper-extra',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({case:select.value,config})});let x=await r.json();if(!r.ok)throw Error(x.error||'求解失败');let lines=[select.selectedOptions[0].textContent,'本次结果：'+x.value];if(x.order)lines.push('作业顺序：'+x.order.join(' → '));if(x.duration!==undefined)lines.push('工期：'+x.duration+' 天；设备租赁：'+x.rental_days+' 天');if(x.starts&&Array.isArray(x.starts))lines.push('每日起始人数：'+x.starts.join('、'));if(x.start_day_cohorts)lines.push('每周起始人数：'+x.start_day_cohorts.join('、'));if(x.rounded!==undefined)lines.push('四舍五入：'+x.rounded);if(x.hours)lines.push('每日值班工时：\n'+x.hours.map((v,i)=>(i+1)+'号：'+v.join('、')).join('\n'));if(x.tasks){let load={};for(const t of x.tasks)load[t.machine]=(load[t.machine]||0)+t.end-t.start;lines.push('各机器加工时长：'+Object.entries(load).map(([k,v])=>'机器'+k+' '+Math.round(v*1000)/1000).join('；'));lines.push('瓶颈机器：'+Object.entries(load).sort((a,b)=>b[1]-a[1])[0][0]);}if(x.starts&&!Array.isArray(x.starts))lines.push('活动开始时间：'+Object.entries(x.starts).map(([k,v])=>k+' '+v).join('；'));if(x.coverage)lines.push('逐日覆盖/需求：'+x.coverage.map((v,i)=>v+'/'+x.demand[i]).join('、'));if(x.note)lines.push(x.note);out.textContent=lines.join('\n');out.style.whiteSpace='pre-wrap'}catch(e){out.textContent='无法求解：'+e.message}});
+ }
+})();
+</script>
+<script>
+(function(){
+ const roman=['I','II','III','IV','V','VI','VII'];
+ el('assignRun').onclick=()=>{try{let rows=el('assignInput').value.trim().split('\n').map(x=>x.split(',').map(y=>y.trim()));let n=rows.length;if(n<2||n>7||rows.some(x=>x.length!==n+1||!x[0]||x.slice(1).some(v=>!Number.isFinite(+v)||+v<0))||new Set(rows.map(x=>x[0])).size!==n)throw Error('请输入 2–7 名不同工人；每行应有相同数量的非负工位效率');let best=-1,winners=[];function walk(a,used){if(a.length===n){let v=Math.min(...a.map((w,k)=>+rows[w][k+1]));if(v>best){best=v;winners=[a.slice()]}else if(v===best)winners.push(a.slice());return}for(let i=0;i<n;i++)if(!used.has(i)){used.add(i);a.push(i);walk(a,used);a.pop();used.delete(i)}}walk([],new Set);let a=winners[0],vals=a.map((w,k)=>+rows[w][k+1]);el('assignResult').textContent='最大瓶颈效率：'+best+' 件/分；搜索 '+Array.from({length:n},(_,i)=>i+1).reduce((x,y)=>x*y,1)+' 种分配，达到最优的方案 '+winners.length+' 种。';el('assignChart').innerHTML=a.map((w,i)=>'<div class="line"><div class="station">工位 '+roman[i]+'</div><div class="track"><div class="bar" style="left:0;width:'+(Math.max(...vals)?vals[i]/Math.max(...vals)*100:0)+'%;background:'+(vals[i]===best?'#dc6b43':'#2b7dab')+'">'+rows[w][0]+' · '+vals[i]+'</div></div></div>').join('');el('assignTable').innerHTML='<table><tr><th>工位</th><th>工人</th><th>效率（件/分）</th></tr>'+a.map((w,i)=>'<tr><td>'+roman[i]+'</td><td>'+rows[w][0]+'</td><td>'+vals[i]+'</td></tr>').join('')+'</table>'}catch(e){el('assignResult').textContent=e.message}};
+ el('assignNlBtn').onclick=()=>{let lines=el('assignNl').value.trim().split('\n').filter(Boolean),out=[];for(let line of lines){let m=line.match(/^工人\s*(\S+?)\s*在(?:各)?工位.*?的效率依次为\s*(.+)$/);if(!m){el('assignNlMsg').textContent='未识别：'+line;return}let vals=m[2].split(/[、,，]/).map(x=>x.trim());if(vals.some(v=>!/^\d+(?:\.\d+)?$/.test(v))){el('assignNlMsg').textContent='效率须为数字';return}out.push([m[1],...vals].join(','))}if(out.length<2||out.length>7||out.some(x=>x.split(',').length!==out.length+1)){el('assignNlMsg').textContent='请写 2–7 名工人，且每人提供相同数量的工位效率';return}el('assignInput').value=out.join('\n');el('assignNlMsg').textContent='已填入 '+out.length+' 名工人；请核对后求解。'};
+})();
+</script>
+<script>
+(function(){
+ const goal=el('projectGoal'),run=el('projectRun'),originalRun=run.onclick;
+ function update(){const cost=goal.value==='cost';el('projectCostFields').style.display=cost?'block':'none';el('projectGoalHelp').textContent=cost?'适合活动有前置关系，且设备只在部分活动期间租用，需要比较工期成本与租赁成本。':'适合只关注活动先后顺序和最早完工日的项目。';run.textContent=cost?'计算最低总成本':'计算关键路径'}
+ goal.addEventListener('change',update);update();
+ run.onclick=async()=>{
+  if(goal.value==='duration'){originalRun();return}
+  try{
+   const tasks=el('projectInput').value.trim().split(/\r?\n/).filter(Boolean).map(line=>{const a=line.split(',').map(v=>v.trim());const d=Number(a[1]);if(a.length!==3||!a[0]||!Number.isFinite(d)||d<=0)throw Error('每行须填写：活动名,正数持续天数,前置活动');return {id:a[0],duration:d,pred:a[2]?a[2].split('|').map(v=>v.trim()).filter(Boolean):[]}});
+   if(!tasks.length)throw Error('请至少输入一项活动');
+   const daily=Number(el('projectDailyCost').value),rental=Number(el('projectRentalCost').value),start=el('projectRentalStart').value.trim(),end=el('projectRentalEnd').value.trim();
+   if(!el('projectDailyCost').value||!el('projectRentalCost').value||![daily,rental].every(v=>Number.isFinite(v)&&v>=0))throw Error('请填写非负的项目每日成本和设备日租金');
+   if(!start||!end)throw Error('请填写租赁开始和结束活动名');
+   el('projectResult').textContent='正在求解……';
+   const response=await fetch('/api/paper-extra',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({case:'IndustryOR-074',config:{tasks,daily_cost:daily,rental_cost:rental,rental_start:start,rental_end:end}})});
+   const x=await response.json();if(!response.ok)throw Error(x.error||'求解失败');
+   const rows=tasks.map(t=>({id:t.id,start:x.starts[t.id],end:x.starts[t.id]+t.duration,duration:t.duration}));
+   el('projectResult').textContent='最低总成本：'+x.value+' 元；项目工期：'+x.duration+' 天；设备租赁：'+x.rental_days+' 天。优化器可推迟非关键活动开工，以减少设备租金。';
+   const span=Math.max(x.duration,...rows.map(r=>r.end),1);
+   el('projectChart').innerHTML=rows.map(r=>'<div class="line"><div class="station">'+r.id+'</div><div class="track"><div class="bar" style="left:'+(r.start/span*100)+'%;width:'+(r.duration/span*100)+'%;background:#2b7dab">'+r.id+'</div></div></div>').join('');
+   el('projectTable').innerHTML='<table><tr><th>活动</th><th>开始日</th><th>结束日</th><th>持续天数</th></tr>'+rows.map(r=>'<tr><td>'+r.id+'</td><td>'+r.start+'</td><td>'+(Math.round(r.end*1000)/1000)+'</td><td>'+r.duration+'</td></tr>').join('')+'</table>';
+  }catch(e){el('projectResult').textContent='无法求解：'+e.message;el('projectChart').innerHTML='';el('projectTable').innerHTML=''}
+ }
+})();
+</script>
+
+<script>
+(function(){
+ const e=id=>document.getElementById(id),rule=e('flexRule');
+ const notes={flex:'适合每天需求不同、班次可独立安排；结果的“总人次”是整个周期的班次数，不等于唯一员工人数。',repeat:'适合每天使用同一套班次人数配置；各天需求可不同，以最高需求约束固定班组。',consecutive:'适合每人从某天开始连续工作若干天，每天上同一时刻的班；结果为所需员工人数。',individual:'适合已知每人的工资、每日可用工时和周期最低工时；只分配工时，不排具体钟点。'};
+ const integer=(id,min,max)=>{const x=Number(e(id).value);if(!Number.isInteger(x)||x<min||x>max)throw Error(id==='flexDays'?'天数须为 1–14 的整数':'时段数与班次长度须在允许范围内');return x};
+ function sync(){const r=rule.value,days=Number(e('flexDays').value),slots=Number(e('flexSlots').value);e('flexShiftFields').style.display=r==='individual'?'none':'block';e('flexIndividualFields').style.display=r==='individual'?'block':'none';e('flexWorkdaysBox').style.display=r==='consecutive'?'block':'none';e('flexRuleHelp').textContent=notes[r];e('flexDemandHelp').textContent='填写 '+(Number.isInteger(days)&&days>0?days:'所选')+' 行，每行 '+(Number.isInteger(slots)&&slots>0?slots:'所选')+' 个非负整数；按第 1 天到最后一天排序。周期会循环，跨日班次可覆盖次日。';}
+ for(const id of ['flexRule','flexDays','flexSlots'])e(id).addEventListener('change',()=>{if(id==='flexSlots'){const n=Number(e('flexSlots').value);if(Number.isInteger(n)&&n>=1&&n<=12)e('flexSlotMinutes').value=(1440/n).toFixed(3)}if(id==='flexDays'){const n=Number(e('flexDays').value);if(Number.isInteger(n)&&n>=1&&Number(e('flexWorkdays').value)>n)e('flexWorkdays').value=n}sync()});sync();
+ function numbers(line){const v=line.split(/[，,]/).map(x=>x.trim());if(v.some(x=>x===''||!/^(?:\d+)(?:\.\d+)?$/.test(x)))throw Error('需求只能使用逗号分隔的非负数字');return v.map(Number)}
+ e('flexNlBtn').onclick=()=>{try{const days=integer('flexDays',1,14),lines=e('flexNl').value.trim().split(/\r?\n/).filter(Boolean);if(lines.length!==days)throw Error('需写 '+days+' 行，每天一行');const rows=lines.map(line=>{const m=line.match(/需要\s*([\d.,，\s]+)\s*(?:人|小时)?\s*$/);if(!m)throw Error('每行请写“第 N 天需要 数字,数字...”');return numbers(m[1])});if(rule.value==='individual'){if(rows.some(x=>x.length!==1))throw Error('个人工时规则每天只需一个总工时');e('flexDailyHours').value=rows.map(x=>x[0]).join(',')}else{const slots=integer('flexSlots',1,12);if(rows.some(x=>x.length!==slots||x.some(v=>!Number.isInteger(v))))throw Error('每天须有 '+slots+' 个整数需求');e('flexDemand').value=rows.map(x=>x.join(',')).join('\n')}e('flexNlMsg').textContent='已填入 '+days+' 天需求，请核对后计算。'}catch(err){e('flexNlMsg').textContent=err.message}};
+ function clock(index,start,minutes){const [h,m]=start.split(':').map(Number),v=((h*60+m+index*minutes)%1440+1440)%1440;return String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0')}
+ e('flexRun').onclick=async()=>{try{const days=integer('flexDays',1,14),r=rule.value,config={days,rule:r};let slotMinutes=0,start='';if(r==='individual'){const d=numbers(e('flexDailyHours').value);if(d.length!==days)throw Error('每天总工时须有 '+days+' 个数字');const people=e('flexPeople').value.trim().split(/\r?\n/).filter(Boolean).map(line=>{const a=line.split(',').map(x=>x.trim());if(a.length!==days+3||!a[0])throw Error('每人须有姓名、工资、最低工时和 '+days+' 天可用工时');const vals=a.slice(1).map(Number);if(a.slice(1).some(x=>x==='')||vals.some(x=>!Number.isFinite(x)||x<0))throw Error('人员的工资和工时须为非负数字');return{name:a[0],wage:vals[0],minimum:vals[1],available:vals.slice(2)}});config.daily_hours=d;config.people=people}
+ else{const slots=integer('flexSlots',1,12),length=integer('flexLength',1,slots);slotMinutes=1440/slots;start=e('flexStart').value;if(!/^\d{2}:\d{2}$/.test(start))throw Error('请填写第一个时段开始时间');const rows=e('flexDemand').value.trim().split(/\r?\n/).filter(Boolean).map(numbers);if(rows.length!==days||rows.some(x=>x.length!==slots||x.some(v=>!Number.isInteger(v))))throw Error('请填写 '+days+' 行需求，每行 '+slots+' 个非负整数');Object.assign(config,{slots,shift_slots:length,demand:rows});if(r==='consecutive')config.workdays=integer('flexWorkdays',1,days)}
+ e('flexResult').textContent='正在求解……';e('flexTable').innerHTML='';e('flexChart').innerHTML='';const response=await fetch('/api/staff-flex',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(config)});const x=await response.json();if(!response.ok)throw Error(x.error||'求解失败');
+ if(r==='individual'){e('flexResult').textContent='最低工资成本：'+x.value+' 元。'+x.note;e('flexTable').innerHTML='<table><tr><th>人员</th>'+Array.from({length:days},(_,i)=>'<th>第 '+(i+1)+' 天</th>').join('')+'</tr>'+x.hours.map((row,i)=>'<tr><td>'+x.names[i]+'</td>'+row.map(v=>'<td>'+v+' 小时</td>').join('')+'</tr>').join('')+'</table>';return}
+ e('flexResult').textContent='最优'+x.unit+'：'+x.value+'；每班连续 '+x.shift_slots+' 段。'+x.note;
+ e('flexTable').innerHTML='<table><tr><th>日</th><th>班次开始</th><th>安排人数</th></tr>'+x.schedule.map(v=>'<tr><td>'+(r==='repeat'?'每天':'第 '+v.day+' 天')+'</td><td>'+clock(v.slot-1,start,slotMinutes)+'</td><td>'+v.people+'</td></tr>').join('')+'</table>';
+ const peak=Math.max(1,...x.coverage.flat());e('flexChart').innerHTML=x.coverage.flatMap((row,d)=>row.map((v,slot)=>'<div class="line"><div class="station">第 '+(d+1)+' 天 '+clock(slot,start,slotMinutes)+'</div><div class="track"><div class="bar" style="left:0;width:'+(v/peak*100)+'%;background:#2b7dab">覆盖 '+v+' / 需求 '+x.demand[d][slot]+'</div></div></div>')).join('');
+ }catch(err){e('flexResult').textContent='无法求解：'+(err.message==='Failed to fetch'?'求解服务暂时无法连接，请稍后刷新页面重试。':err.message);e('flexTable').innerHTML='';e('flexChart').innerHTML=''}};
+})();
+</script>
+</body>
+</html>
